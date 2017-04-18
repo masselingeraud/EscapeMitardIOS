@@ -5,6 +5,7 @@
 //  Created by Geraud Masselin on 02/03/2017.
 //  Copyright © 2017 Geraud Masselin. All rights reserved.
 //
+import AVFoundation
 
 import SpriteKit
 import GameplayKit
@@ -71,6 +72,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         diamondBleu?.removeFromParent()
         TNT?.removeFromParent()
+        
+        player?.run(SKAction.repeatForever(SKAction.animate(with: [SKTexture(imageNamed: "1er") , SKTexture(imageNamed: "2eme") , SKTexture(imageNamed: "3eme") , SKTexture(imageNamed: "4eme") ], timePerFrame: 0.1)))
     }
     
     func randomCGFloat(min: CGFloat, max: CGFloat) -> CGFloat
@@ -154,6 +157,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 if( element.name == "Diamond")
                 {
+                    playSound()
                     element.removeFromParent()
                     addDiamond()
                 }
@@ -179,14 +183,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let moveLoop = SKAction.sequence([moveUp, moveReset])
         let moveForever = SKAction.repeatForever(moveLoop)
         
-        background2?.run(moveForever)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1)
+        {
+            let moveUpB = SKAction.moveBy(x: 0, y: 1355, duration: 2)
+            self.background?.run(moveUpB)
+
+            self.background2?.run(moveForever)
+            
+            self.creatTNT(nombreDeTNT: 4)
+            self.addDiamond()
+            self.begin = true
+
+        }
         
         
+
         
-        self.creatTNT(nombreDeTNT: 4)
-        self.addDiamond()
-        begin = true
-        
+
         for item in children
         {
             if(item.name != "gameOver" && item.name != "rejouer")
@@ -194,7 +207,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 item.isHidden = false
             }
         }
-        
+ 
         gameOverLabel?.isHidden = true
         rejouerLabel?.isHidden = true
     }
@@ -202,6 +215,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func stop(){
         background?.isHidden = true
         background2?.isHidden = true
+        
+        background2?.removeAllActions()
         
         begin = false
         
@@ -212,12 +227,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 item.isHidden = true
             }
             if(item.name == "Diamond" || item.name == "Tnt"){
+                
                 item.removeFromParent()
+                item.isPaused = true
             }
         }
                 
         gameOverLabel?.isHidden = false
         rejouerLabel?.isHidden = false
+        
+        
+        
+        
         
         self.metre = 0
     }
@@ -238,6 +259,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+       
+    func playSound()
+    {
+            run(SKAction.playSoundFileNamed("armor_hit1.wav", waitForCompletion: false))
+        
+    }
+    
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
   
     }
@@ -249,9 +277,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func update(_ currentTime: TimeInterval) {
         if(begin == true){
-            let moveUpB = SKAction.moveBy(x: 0, y: 1355, duration: 2)
-            background?.run(moveUpB)
-            
             self.timeLabel?.text = "\(self.metre) m"
             self.metre += 1
         }
